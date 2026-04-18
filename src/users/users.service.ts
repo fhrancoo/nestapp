@@ -1,58 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
-let users = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-  },
-  {
-    id: 2,
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-  },
-  {
-    id: 3,
-    name: 'Bob Smith',
-    email: 'bob.smith@example.com',
-  }
-];
+import { PrismaService } from 'src/prisma/prisma.service';
 
 
 @Injectable()
 export class UsersService {
+  constructor(private prismaService: PrismaService) {}
 
-  create(createUserDto: CreateUserDto) {
-    const lastId = users.reduce((maxId, user) => Math.max(maxId, user.id), 0);
-    const newUser = { ...createUserDto, id: lastId + 1 };
-    users.push(newUser);
+  // create(createUserDto: CreateUserDto) {
+  //   const lastId = users.reduce((maxId, user) => Math.max(maxId, user.id), 0);
+  //   const newUser = { ...createUserDto, id: lastId + 1 };
+  //   users.push(newUser);
 
-    return newUser;
-  }
+  //   return newUser;
+  // }
 
   findAll() {
-    return users;
+    return this.prismaService.usuarios.findMany();
   }
 
-  findOne(id: number) {
-    return users.find(user => user.id === id);
-  }
+  // findOne(id: number) {
+  //   return users.find(user => user.id === id);
+  // }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const user = this.findOne(id);
+  // update(id: number, updateUserDto: UpdateUserDto) {
+  //   const user = this.findOne(id);
 
-    if (user) {
-      const newUser = { ...user, ...updateUserDto };
-      users = users.map(u => (u.id === id ? newUser : u));
-    }
+  //   if (user) {
+  //     const newUser = { ...user, ...updateUserDto };
+  //     users = users.map(u => (u.id === id ? newUser : u));
+  //   }
 
-    return this.findOne(id);
-  }
+  //   return this.findOne(id);
+  // }
 
-  remove(id: number) {
-    users = users.filter(user => user.id !== id);
-    return users;
-  }
+  // remove(id: number) {
+  //   users = users.filter(user => user.id !== id);
+  //   return users;
+  // }
 }

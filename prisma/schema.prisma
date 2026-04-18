@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model auditoria_precios {
+  id              Int       @id @default(autoincrement())
+  producto_id     Int?
+  precio_anterior Decimal?  @db.Decimal(10, 2)
+  precio_nuevo    Decimal?  @db.Decimal(10, 2)
+  fecha           DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model categorias {
+  id        Int         @id @default(autoincrement())
+  nombre    String?
+  productos productos[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cupones {
+  id                Int                @id @default(autoincrement())
+  codigo            String             @unique
+  porcentaje        Int?
+  fecha_vencimiento DateTime           @db.Date
+  activo            Boolean?           @default(true)
+  usuarios_cupones  usuarios_cupones[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model detalle_pedidos {
+  id              Int        @id @default(autoincrement())
+  pedido_id       Int?
+  producto_id     Int?
+  cantidad        Int
+  precio_unitario Decimal    @db.Decimal(10, 2)
+  pedidos         pedidos?   @relation(fields: [pedido_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  productos       productos? @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pedidos {
+  id              Int               @id @default(autoincrement())
+  usuario_id      Int?
+  fecha           DateTime?         @default(now()) @db.Timestamptz(6)
+  estado          estado_pedido?    @default(pendiente)
+  total           Decimal?          @default(0) @db.Decimal(12, 2)
+  detalle_pedidos detalle_pedidos[]
+  usuarios        usuarios?         @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model productos {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @db.VarChar(100)
+  precio                Decimal                 @db.Decimal(10, 2)
+  stock                 Int                     @default(0)
+  categoria_id          Int
+  detalle_pedidos       detalle_pedidos[]
+  categorias            categorias              @relation(fields: [categoria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proveedores_productos proveedores_productos[]
+}
+
+model proveedores {
+  id                    Int                     @id @default(autoincrement())
+  razon_social          String                  @unique
+  email                 String                  @unique
+  proveedores_productos proveedores_productos[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model proveedores_productos {
+  proveedor_id     Int
+  producto_id      Int
+  precio_proveedor Decimal?    @db.Decimal(10, 2)
+  productos        productos   @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proveedores      proveedores @relation(fields: [proveedor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([proveedor_id, producto_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model usuarios {
+  id               Int                @id @default(autoincrement())
+  nombre           String             @db.VarChar(100)
+  email            String             @unique @db.VarChar(100)
+  puntos           Int?               @default(0)
+  ciudad           String?            @db.VarChar(50)
+  fecha_registro   DateTime?          @default(now()) @db.Timestamp(6)
+  pedidos          pedidos[]
+  usuarios_cupones usuarios_cupones[]
+}
+
+model usuarios_cupones {
+  id         Int       @id @default(autoincrement())
+  usuario_id Int?
+  cupon_id   Int?
+  cupones    cupones?  @relation(fields: [cupon_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios   usuarios? @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+enum estado_pedido {
+  pendiente
+  procesado
+  enviado
+  entregado
+  cancelado
+}
